@@ -1,0 +1,108 @@
+<idea-plugin>
+    <id>com.github.ignaciotcrespo.colormanipulation</id>
+    <name>Color Manipulation</name>
+    <vendor email="itcrespo@gmail.com" url="https://github.com/ignaciotcrespo">Ivan Crespo</vendor>
+
+    <description><![CDATA[
+    <p>A powerful color toolkit for developers. Select any color in your code, right-click, and convert, adjust, mix, or analyze it — all without leaving the editor.</p>
+
+    <p><img src="https://raw.githubusercontent.com/ignaciotcrespo/color-manipulation-plugin/main/docs/img/screenshot.png" alt="Color Manipulation Plugin" width="600"/></p>
+
+    <h3>Convert Format</h3>
+    <p>Convert between <b>30+ color formats</b> across all major platforms:</p>
+    <ul>
+        <li><b>Web/CSS</b>: #RGB, #RRGGBB, #RRGGBBAA, #AARRGGBB, rgb(), rgba(), hsl(), hsla(), hwb(), Named CSS Colors</li>
+        <li><b>Android/Kotlin</b>: 0xRRGGBB, Color(0xAARRGGBB), Color.rgb(), Color.argb()</li>
+        <li><b>iOS/Swift</b>: UIColor(red:green:blue:alpha:), Color(red:green:blue:)</li>
+        <li><b>Java</b>: new Color(r, g, b), new Color(r, g, b, a)</li>
+        <li><b>Generic</b>: Float RGB/RGBA (0.0-1.0), with and without parentheses</li>
+        <li><b>Toggle</b>: Toggle # prefix, Toggle 0x prefix, Swap RRGGBBAA/AARRGGBB byte order</li>
+    </ul>
+
+    <h3>Convert from Name</h3>
+    <p>Convert named colors from popular design systems to hex values:</p>
+    <ul>
+        <li>CSS Named Colors (red, cornflowerblue, ...)</li>
+        <li>Tailwind CSS (gray-800, blue-500, ...)</li>
+        <li>Bootstrap (primary, danger, blue-400, ...)</li>
+        <li>Material Design (Blue 500, Red 300, ...)</li>
+        <li>iOS System Colors (systemBlue, systemRed, ...)</li>
+    </ul>
+
+    <h3>Adjustments</h3>
+    <ul>
+        <li><b>Lighten/Darken</b> by preset (5%, 10%, 20%) or custom percentage</li>
+        <li><b>Saturate/Desaturate</b> with presets, grayscale, or custom</li>
+        <li><b>Adjust Alpha</b>: 100%, 75%, 50%, 25%, 0%, or custom</li>
+        <li><b>Hue Rotate</b>: +30, +60, +90, +180 degrees, invert, or custom</li>
+        <li><b>Temperature</b>: Warmer/Cooler with presets or custom</li>
+    </ul>
+
+    <h3>Mixing &amp; Palette</h3>
+    <ul>
+        <li><b>Color Mixing</b>: Tint (mix with white), Shade (mix with black), custom percentages</li>
+        <li><b>Palette Generate</b>: Complementary, Analogous, Triadic, Shades (100-900)</li>
+    </ul>
+
+    <h3>Accessibility</h3>
+    <ul>
+        <li><b>WCAG Contrast Check</b>: Shows contrast ratio against white/black with AA/AAA pass/fail</li>
+        <li><b>Auto-fix</b>: Make AA or AAA compliant on white or black backgrounds</li>
+    </ul>
+
+    <h3>Color Blindness Simulation</h3>
+    <ul>
+        <li>Protanopia (red-blind), Deuteranopia (green-blind), Tritanopia (blue-blind)</li>
+    </ul>
+
+    <h3>Closest Match</h3>
+    <p>Find the closest color in popular design systems and convert to name or value:</p>
+    <ul>
+        <li>Named CSS, Tailwind, Bootstrap, Material Design, iOS System Colors</li>
+    </ul>
+
+    <h3>Practical Utils</h3>
+    <ul>
+        <li><b>Random Color</b></li>
+        <li><b>Sort Lines</b> by Hue, Lightness, or Saturation (reorders full lines by their color)</li>
+        <li><b>Sort Colors</b> by Hue, Lightness, or Saturation (swaps color values in place)</li>
+        <li><b>Normalize to Same Format</b>: Convert all selected colors to match the first one's format</li>
+    </ul>
+
+    <h3>Show Color Info</h3>
+    <p>Popup showing all format conversions, HSL values, alpha, and closest matches across all design systems.</p>
+
+    <h3>More Features</h3>
+    <ul>
+        <li><b>Repeat Last Action</b>: Quickly re-apply any previous transform (including custom values)</li>
+        <li><b>Multi-cursor support</b>: Apply transforms to all selected colors at once</li>
+        <li><b>Embedded color detection</b>: Select a block of text and the plugin finds and transforms all colors inside</li>
+        <li><b>Live preview icons</b>: See the resulting color in the menu before clicking</li>
+        <li><b>Keyboard shortcut</b>: Ctrl+Alt+C (Cmd+Alt+C on Mac)</li>
+    </ul>
+
+    <p>Works in <b>all JetBrains IDEs</b> (IntelliJ, WebStorm, Android Studio, PyCharm, etc.) with <b>all file types</b>.</p>
+
+    <br/>
+    <p>If you find this plugin useful, consider <a href="https://github.com/sponsors/ignaciotcrespo">sponsoring its development</a>. Your support helps keep it free and actively maintained. Thank you!</p>
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+
+    <actions>
+        <group id="ColorManipulation.MainGroup"
+               class="com.github.ignaciotcrespo.colormanipulation.actions.ColorManipulationGroup"
+               text="Color Manipulation"
+               description="Color manipulation actions"
+               popup="true">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+        </group>
+
+        <action id="ColorManipulation.QuickAction"
+                class="com.github.ignaciotcrespo.colormanipulation.actions.ColorManipulationGroup"
+                text="Color Manipulation..."
+                description="Open color manipulation popup">
+            <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt C"/>
+        </action>
+    </actions>
+</idea-plugin>
