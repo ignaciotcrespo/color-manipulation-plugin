@@ -6,6 +6,12 @@ Works in **all JetBrains IDEs** (IntelliJ IDEA, WebStorm, Android Studio, PyChar
 
 ![Color Manipulation Plugin](docs/img/screenshot.png)
 
+[![Sponsor](https://img.shields.io/badge/Sponsor-%E2%9D%A4-pink?logo=github-sponsors)](https://github.com/sponsors/ignaciotcrespo)
+
+**Other projects:**
+- [GitShelf](https://github.com/ignaciotcrespo/gitshelf) — Changelists and shelves for git in the terminal
+- [Vector Drawable Thumbnails](https://github.com/ignaciotcrespo/vector-drawable-thumbnails-plugin) — Thumbnail previews of Android Vector Drawables in JetBrains IDEs
+
 ## Installation
 
 - **From JetBrains Marketplace**: Settings > Plugins > Marketplace > Search "Color Manipulation"
@@ -127,10 +133,6 @@ ActionEntry.Transform("Lighten 7%") { c, _ -> ColorTransforms.lighten(c, 7.0) }
 ```
 
 Adding a new category is one definition file + one line in `ColorManipulationGroup`.
-
-## Support
-
-If you find this plugin useful, consider [sponsoring its development](https://github.com/sponsors/ignaciotcrespo). Your support helps keep it free and actively maintained.
 
 ## License
 
