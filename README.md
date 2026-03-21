@@ -134,6 +134,10 @@ ActionEntry.Transform("Lighten 7%") { c, _ -> ColorTransforms.lighten(c, 7.0) }
 
 Adding a new category is one definition file + one line in `ColorManipulationGroup`.
 
+## Inspiration
+
+This plugin was inspired by the excellent [String Manipulation](https://plugins.jetbrains.com/plugin/2162-string-manipulation) plugin by Vojtech Krasa. I used it daily and at some point thought: "I need something like this to easily change the colors in the code" So I built it.
+
 ## License
 
 [MIT License](LICENSE)
