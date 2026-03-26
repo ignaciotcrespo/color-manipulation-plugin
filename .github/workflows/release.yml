@@ -37,11 +37,3 @@ jobs:
           name: "v${{ steps.version.outputs.version }}"
           generate_release_notes: true
           files: build/distributions/*.zip
-
-      - name: Publish Plugin to JetBrains Marketplace
-        env:
-          PUBLISH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
-          CERTIFICATE_CHAIN: ${{ secrets.CERTIFICATE_CHAIN }}
-          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
-          PRIVATE_KEY_PASSWORD: ${{ secrets.PRIVATE_KEY_PASSWORD }}
-        run: ./gradlew publishPlugin
