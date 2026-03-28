@@ -93,9 +93,44 @@ Find and convert to the nearest color in popular design systems:
 - **Sort Colors** by Hue, Lightness, or Saturation — swaps color values in place
 - **Normalize to Same Format** — convert all selected colors to match the first one's format
 
+### Replace with Color
+
+Replace one or many selected colors with a custom color value. A dialog lets you type any color in any supported format — `#FF5733`, `rgb(255, 87, 51)`, `hsl(11, 100%, 60%)`, `red`, or any other format the plugin recognizes. As you type, a live preview swatch shows the color and a label confirms the detected format.
+
+Each replaced occurrence keeps its original format: if you enter `#FF0000` and the codebase has `rgb(...)` and `hsl(...)` entries, they become `rgb(255, 0, 0)` and `hsl(0, 100%, 50%)` respectively.
+
+Available in both the **editor right-click menu** and the **palette context menu**.
+
 ### Show Color Info
 
-Popup with all format conversions, HSL values, alpha, and closest matches across all design systems.
+Popup with all format conversions, HSL values, alpha, WCAG contrast ratios with colored pass/fail badges, suggested AA-compliant color with visual swatch preview, and closest matches across CSS, Tailwind, Bootstrap, Material Design, and iOS design systems.
+
+### Project Color Palette
+
+A dedicated **side panel** (Tool Window) that scans your entire project and gives you a bird's-eye view of every color in your codebase. Open it from **View > Tool Windows > Color Palette**, or from the right sidebar.
+
+#### How it works
+
+Click **Analyze Project** to scan all source files. The plugin finds every color occurrence across 40+ file types — CSS, HTML, JavaScript, TypeScript, Kotlin, Swift, Java, Python, Go, Rust, and more — while automatically skipping build directories, node_modules, and test files.
+
+Results appear in a tree view organized by frequency (most used first) or by hue. Each node shows a color swatch, the color value, occurrence count, and file count.
+
+#### Palette features
+
+| Feature | Description |
+|---|---|
+| **Tree view** | Colors grouped by frequency or hue, with swatches and counts |
+| **Similar colors** | Groups visually similar colors that could be unified |
+| **Format inconsistencies** | Highlights the same color written in different formats |
+| **WCAG contrast badges** | Inline AAA/AA/Fail indicators on every color node |
+| **Rich tooltips** | Hover for all format conversions and WCAG contrast ratios |
+| **Color Info popup** | Full details with pass/fail badges, AA fix suggestion with swatch preview, and closest matches in 5 design systems |
+| **Click-to-navigate** | Click any occurrence to jump to the exact line and column |
+| **Context menu** | Right-click for the same transforms as the editor menu — convert format, adjustments, mixing, accessibility, color blindness simulation |
+| **Replace with Color** | Batch-replace selected colors or groups with a custom value |
+| **Display format** | View colors in #RRGGBB, rgb(), hsl(), 0x, Color(), or UIColor() |
+| **File filter** | Narrow scans to specific patterns (e.g. `*.tsx`, `*.css`) |
+| **State preservation** | Expanded nodes, selection, and scroll position survive re-scans |
 
 ### Repeat Last Action
 

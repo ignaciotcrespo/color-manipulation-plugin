@@ -72,6 +72,28 @@
     <h3>Show Color Info</h3>
     <p>Popup showing all format conversions, HSL values, alpha, and closest matches across all design systems.</p>
 
+    <h3>Replace with Color</h3>
+    <p>Replace one or many colors with a custom color value. Type any color format (hex, rgb, hsl, named CSS, etc.) in the dialog and all selected occurrences are updated, each keeping its original format. Available in both the editor menu and the palette context menu.</p>
+
+    <h3>Project Color Palette</h3>
+    <p>A dedicated <b>side panel</b> (Tool Window) that scans your entire project and gives you a bird's-eye view of every color in your codebase.</p>
+    <ul>
+        <li><b>Full project scan</b>: Finds all color occurrences across 40+ file types (CSS, HTML, JS, TS, Kotlin, Swift, Java, Python, Go, Rust, and more)</li>
+        <li><b>Tree view</b> organized by frequency or hue, with color swatches and occurrence counts</li>
+        <li><b>Similar colors detection</b>: Groups visually similar colors that could be unified into one</li>
+        <li><b>Format inconsistencies</b>: Highlights the same color written in different formats across files</li>
+        <li><b>WCAG contrast badges</b>: Inline AA/AAA/Fail indicators on every color node</li>
+        <li><b>Rich tooltips on hover</b>: Full color details with all format conversions and WCAG contrast ratios</li>
+        <li><b>Color Info popup</b>: All formats, HSL, alpha, WCAG contrast with colored pass/fail badges, suggested AA fix with visual swatch preview, and closest matches in CSS, Tailwind, Bootstrap, Material, and iOS</li>
+        <li><b>Click-to-navigate</b>: Click any occurrence to jump to the exact line and column in the editor</li>
+        <li><b>Right-click context menu</b>: Apply the same transforms as the editor menu (convert format, lighten/darken, saturate, hue rotate, mix, accessibility fixes, color blindness simulation) on single colors, multiple selections, or entire groups</li>
+        <li><b>Replace with Color</b>: Batch-replace selected colors or groups with a custom color value</li>
+        <li><b>Display format selector</b>: View colors in #RRGGBB, rgb(), hsl(), 0x, Color(), or UIColor()</li>
+        <li><b>File filter</b>: Narrow the scan to specific file patterns (e.g. *.tsx, *.css)</li>
+        <li><b>State preservation</b>: Expanded nodes, selection, and scroll position are preserved across re-scans</li>
+    </ul>
+    <p>Open it from: <b>View &gt; Tool Windows &gt; Color Palette</b>, or from the right sidebar.</p>
+
     <h3>More Features</h3>
     <ul>
         <li><b>Repeat Last Action</b>: Quickly re-apply any previous transform (including custom values)</li>
@@ -88,6 +110,14 @@
     ]]></description>
 
     <depends>com.intellij.modules.platform</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <toolWindow id="Color Palette"
+                    anchor="right"
+                    factoryClass="com.github.ignaciotcrespo.colormanipulation.palette.ColorPaletteToolWindowFactory"
+                    icon="/META-INF/colorWheelIcon.svg"
+                    secondary="true"/>
+    </extensions>
 
     <actions>
         <group id="ColorManipulation.MainGroup"
