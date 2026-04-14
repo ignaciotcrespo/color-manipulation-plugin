@@ -30,6 +30,7 @@ enum class ColorFormat(
 
     // iOS / Swift
     UICOLOR("UIColor(red:green:blue:alpha:)", Category.SWIFT, supportsAlpha = true),
+    UICOLOR_OBJC("[UIColor colorWithRed:green:blue:alpha:]", Category.SWIFT, supportsAlpha = true),
     SWIFTUI_COLOR("Color(red:green:blue:)", Category.SWIFT),
 
     // Java

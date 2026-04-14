@@ -31,6 +31,7 @@ object ColorConverter {
     private val ANDROID_RGB_RE = Regex("""^Color\.rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$""")
 
     private val UICOLOR_RE = Regex("""^UIColor\(\s*red:\s*([\d.]+)\s*,\s*green:\s*([\d.]+)\s*,\s*blue:\s*([\d.]+)\s*,\s*alpha:\s*([\d.]+)\s*\)$""")
+    private val UICOLOR_OBJC_RE = Regex("""^\[UIColor\s+colorWithRed:\s*([\d.]+)\s+green:\s*([\d.]+)\s+blue:\s*([\d.]+)\s+alpha:\s*([\d.]+)\s*]$""")
     private val SWIFTUI_RE = Regex("""^Color\(\s*red:\s*([\d.]+)\s*,\s*green:\s*([\d.]+)\s*,\s*blue:\s*([\d.]+)\s*\)$""")
 
     private val JAVA_COLOR_ALPHA_RE = Regex("""^new Color\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$""")
@@ -52,7 +53,7 @@ object ColorConverter {
             ?: parseHwb(t)
             ?: parseHex0x(t)
             ?: parseCompose(t) ?: parseAndroidArgb(t) ?: parseAndroidRgb(t)
-            ?: parseUIColor(t) ?: parseSwiftUI(t)
+            ?: parseUIColor(t) ?: parseUIColorObjc(t) ?: parseSwiftUI(t)
             ?: parseJavaColorAlpha(t) ?: parseJavaColor(t)
             ?: parseFloatRgba(t) ?: parseFloatRgb(t)
             ?: parseFloatRgbaNoParen(t) ?: parseFloatRgbNoParen(t)
@@ -111,6 +112,7 @@ object ColorConverter {
             ColorFormat.ANDROID_ARGB -> "Color.argb($ai, $ri, $gi, $bi)"
 
             ColorFormat.UICOLOR -> "UIColor(red: ${fmtFloat(color.r / 255.0)}, green: ${fmtFloat(color.g / 255.0)}, blue: ${fmtFloat(color.b / 255.0)}, alpha: ${fmtFloat(color.a)})"
+            ColorFormat.UICOLOR_OBJC -> "[UIColor colorWithRed:${fmtFloat(color.r / 255.0)} green:${fmtFloat(color.g / 255.0)} blue:${fmtFloat(color.b / 255.0)} alpha:${fmtFloat(color.a)}]"
             ColorFormat.SWIFTUI_COLOR -> "Color(red: ${fmtFloat(color.r / 255.0)}, green: ${fmtFloat(color.g / 255.0)}, blue: ${fmtFloat(color.b / 255.0)})"
 
             ColorFormat.JAVA_COLOR -> "new Color($ri, $gi, $bi)"
@@ -156,6 +158,9 @@ object ColorConverter {
             },
             Regex("""UIColor\(\s*red:\s*([\d.]+)\s*,\s*green:\s*([\d.]+)\s*,\s*blue:\s*([\d.]+)\s*,\s*alpha:\s*([\d.]+)\s*\)""") to { m: MatchResult ->
                 parseFloatRgba(m)?.let { it to ColorFormat.UICOLOR }
+            },
+            Regex("""\[UIColor\s+colorWithRed:\s*([\d.]+)\s+green:\s*([\d.]+)\s+blue:\s*([\d.]+)\s+alpha:\s*([\d.]+)\s*]""") to { m: MatchResult ->
+                parseFloatRgba(m)?.let { it to ColorFormat.UICOLOR_OBJC }
             },
             Regex("""Color\(\s*red:\s*([\d.]+)\s*,\s*green:\s*([\d.]+)\s*,\s*blue:\s*([\d.]+)\s*\)""") to { m: MatchResult ->
                 parseFloatRgbTriple(m)?.let { it to ColorFormat.SWIFTUI_COLOR }
@@ -420,6 +425,7 @@ object ColorConverter {
     }
     private fun parseAndroidRgb(t: String) = ANDROID_RGB_RE.matchEntire(t)?.let { parseRgbTriple(it)?.let { c -> c to ColorFormat.ANDROID_RGB } }
     private fun parseUIColor(t: String) = UICOLOR_RE.matchEntire(t)?.let { parseFloatRgba(it)?.let { c -> c to ColorFormat.UICOLOR } }
+    private fun parseUIColorObjc(t: String) = UICOLOR_OBJC_RE.matchEntire(t)?.let { parseFloatRgba(it)?.let { c -> c to ColorFormat.UICOLOR_OBJC } }
     private fun parseSwiftUI(t: String) = SWIFTUI_RE.matchEntire(t)?.let { parseFloatRgbTriple(it)?.let { c -> c to ColorFormat.SWIFTUI_COLOR } }
     private fun parseJavaColor(t: String) = JAVA_COLOR_RE.matchEntire(t)?.let { parseRgbTriple(it)?.let { c -> c to ColorFormat.JAVA_COLOR } }
     private fun parseJavaColorAlpha(t: String): Pair<UnifiedColor, ColorFormat>? {

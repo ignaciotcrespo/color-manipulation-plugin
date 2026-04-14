@@ -87,6 +87,7 @@ class ConvertFormatGroup : DefaultActionGroup("Convert Format...", true) {
             ),
             ColorFormat.Category.SWIFT to listOf(
                 ColorFormat.UICOLOR to "UIColor(red:green:blue:alpha:)",
+                ColorFormat.UICOLOR_OBJC to "[UIColor colorWithRed:green:blue:alpha:]",
                 ColorFormat.SWIFTUI_COLOR to "Color(red:green:blue:)",
             ),
             ColorFormat.Category.JAVA to listOf(
