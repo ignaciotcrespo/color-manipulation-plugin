@@ -87,6 +87,7 @@
         <li><b>Color Info popup</b>: All formats, HSL, alpha, WCAG contrast with colored pass/fail badges, suggested AA fix with visual swatch preview, and closest matches in CSS, Tailwind, Bootstrap, Material, and iOS</li>
         <li><b>Click-to-navigate</b>: Click any occurrence to jump to the exact line and column in the editor</li>
         <li><b>Right-click context menu</b>: Apply the same transforms as the editor menu (convert format, lighten/darken, saturate, hue rotate, mix, accessibility fixes, color blindness simulation) on single colors, multiple selections, or entire groups</li>
+        <li><b>Inspect in Color Palette</b>: Right-click any color in the editor to open the palette filtered to that color — see all occurrences, similar-color clusters, and format inconsistencies for it (matched by RGB, format-agnostic)</li>
         <li><b>Replace with Color</b>: Batch-replace selected colors or groups with a custom color value</li>
         <li><b>Display format selector</b>: View colors in #RRGGBB, rgb(), hsl(), 0x, Color(), or UIColor()</li>
         <li><b>File filter</b>: Narrow the scan to specific file patterns (e.g. *.tsx, *.css)</li>
