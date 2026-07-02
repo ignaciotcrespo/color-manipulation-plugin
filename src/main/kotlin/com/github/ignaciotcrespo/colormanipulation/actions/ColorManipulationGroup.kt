@@ -4,6 +4,7 @@ import com.github.ignaciotcrespo.colormanipulation.actions.convert.ConvertFormat
 import com.github.ignaciotcrespo.colormanipulation.actions.definitions.*
 import com.github.ignaciotcrespo.colormanipulation.actions.info.ShowColorInfoAction
 import com.github.ignaciotcrespo.colormanipulation.palette.AnalyzeProjectAction
+import com.github.ignaciotcrespo.colormanipulation.palette.InspectInPaletteAction
 import com.github.ignaciotcrespo.colormanipulation.ui.*
 import com.github.ignaciotcrespo.colormanipulation.util.EditorUtil
 import com.intellij.openapi.actionSystem.*
@@ -35,6 +36,7 @@ class ColorManipulationGroup : DefaultActionGroup() {
             add(Separator.getInstance())
             add(DynamicColorGroup(PracticalMenu, UtilsIcon()))
             add(ShowColorInfoAction())
+            add(InspectInPaletteAction())
             add(Separator.getInstance())
         }
         add(AnalyzeProjectAction())

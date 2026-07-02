@@ -79,7 +79,7 @@ object ColorAnalyzer {
         return dr * dr + dg * dg + db * db
     }
 
-    private fun toHexKey(color: UnifiedColor): String {
+    fun toHexKey(color: UnifiedColor): String {
         val r = color.r.toInt().coerceIn(0, 255)
         val g = color.g.toInt().coerceIn(0, 255)
         val b = color.b.toInt().coerceIn(0, 255)

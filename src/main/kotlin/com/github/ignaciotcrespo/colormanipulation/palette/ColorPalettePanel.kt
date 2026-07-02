@@ -6,6 +6,7 @@ import com.github.ignaciotcrespo.colormanipulation.model.ColorTransforms
 import com.github.ignaciotcrespo.colormanipulation.model.NamedCssColors
 import com.github.ignaciotcrespo.colormanipulation.model.TailwindColors
 import com.github.ignaciotcrespo.colormanipulation.model.UnifiedColor
+import com.github.ignaciotcrespo.colormanipulation.ui.ColorCircleIcon
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
@@ -59,6 +60,16 @@ class ColorPalettePanel(private val project: Project) : JPanel(BorderLayout()) {
 
     private val optionsPanel = JPanel(GridBagLayout())
     private var optionsVisible = false
+
+    private var inspectFilter: UnifiedColor? = null
+    private val inspectChipPanel = JPanel(BorderLayout(JBUI.scale(6), 0)).apply {
+        border = JBUI.Borders.empty(2, 4)
+        isVisible = false
+    }
+    private val inspectChipLabel = JBLabel()
+    private val inspectChipClear = JBLabel("<html><a href=''>Clear</a></html>").apply {
+        cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+    }
 
     init {
         val headerPanel = JPanel(GridBagLayout())
@@ -118,8 +129,18 @@ class ColorPalettePanel(private val project: Project) : JPanel(BorderLayout()) {
         gbc.gridy = 1
         headerPanel.add(optionsPanel, gbc)
 
-        // Row 3: summary
+        // Row 3: inspect-filter chip (visible only when a filter is active)
+        inspectChipPanel.add(inspectChipLabel, BorderLayout.CENTER)
+        inspectChipPanel.add(inspectChipClear, BorderLayout.EAST)
+        inspectChipClear.addMouseListener(object : MouseAdapter() {
+            override fun mouseClicked(e: MouseEvent) = clearInspectFilter()
+        })
         gbc.gridy = 2
+        gbc.insets = Insets(JBUI.scale(2), 0, JBUI.scale(2), 0)
+        headerPanel.add(inspectChipPanel, gbc)
+
+        // Row 4: summary
+        gbc.gridy = 3
         gbc.insets = Insets(0, 0, 0, 0)
         headerPanel.add(summaryLabel, gbc)
 
@@ -179,6 +200,8 @@ class ColorPalettePanel(private val project: Project) : JPanel(BorderLayout()) {
     }
 
     fun runScan() {
+        inspectFilter = null
+        inspectChipPanel.isVisible = false
         scanButton.isEnabled = false
         summaryLabel.text = "Scanning project..."
         val extensionFilter = parseFilePatterns()
@@ -219,7 +242,238 @@ class ColorPalettePanel(private val project: Project) : JPanel(BorderLayout()) {
         }.queue()
     }
 
+    /**
+     * Filter every section of the tree by [reference]: the Frequency section shows only the
+     * matching color group, Similar Colors shows the cluster containing it, and Format
+     * Inconsistencies shows the entry for it (all matched by RGB, format-agnostic).
+     * If no scan has been performed yet, runs a scan first and applies the filter afterward.
+     */
+    fun inspectColor(reference: UnifiedColor) {
+        inspectFilter = reference
+        updateInspectChip(reference)
+        val analysis = lastAnalysis
+        if (analysis == null) {
+            runScanThenInspect(reference)
+        } else {
+            rebuildTree(analysis)
+        }
+    }
+
+    private fun clearInspectFilter() {
+        if (inspectFilter == null) return
+        inspectFilter = null
+        inspectChipPanel.isVisible = false
+        lastAnalysis?.let { rebuildTree(it) }
+    }
+
+    private fun updateInspectChip(reference: UnifiedColor) {
+        val hex = ColorConverter.format(reference, ColorFormat.HEX6)
+        inspectChipLabel.icon = ColorCircleIcon(reference.toAwtColor(), JBUI.scale(12))
+        inspectChipLabel.text = "Inspecting $hex"
+        inspectChipPanel.isVisible = true
+    }
+
+    private fun runScanThenInspect(reference: UnifiedColor) {
+        scanButton.isEnabled = false
+        summaryLabel.text = "Scanning project..."
+        val extensionFilter = parseFilePatterns()
+
+        object : Task.Backgroundable(project, "Analyzing Project Colors", true) {
+            override fun run(indicator: ProgressIndicator) {
+                indicator.text = "Scanning project files for colors..."
+                val startTime = System.currentTimeMillis()
+                val colors = ProjectColorScanner.scan(project, indicator, extensionFilter)
+                val elapsed = System.currentTimeMillis() - startTime
+
+                if (indicator.isCanceled) return
+
+                indicator.text = "Analyzing colors..."
+                indicator.isIndeterminate = true
+                val analysis = ColorAnalyzer.analyze(colors, 0, elapsed)
+
+                SwingUtilities.invokeLater {
+                    lastAnalysis = analysis
+                    // Re-apply chip in case the user cleared it while scanning
+                    if (inspectFilter == null) {
+                        inspectFilter = reference
+                        updateInspectChip(reference)
+                    }
+                    rebuildTree(analysis)
+                    scanButton.isEnabled = true
+                }
+            }
+
+            override fun onCancel() {
+                SwingUtilities.invokeLater {
+                    summaryLabel.text = "Scan cancelled."
+                    scanButton.isEnabled = true
+                }
+            }
+
+            override fun onThrowable(error: Throwable) {
+                SwingUtilities.invokeLater {
+                    summaryLabel.text = "Error: ${error.message}"
+                    scanButton.isEnabled = true
+                }
+            }
+        }.queue()
+    }
+
+    /**
+     * Filter every section by [reference]: RGB-exact match for Frequency and Format Inconsistencies,
+     * and any cluster containing that RGB match for Similar Colors.
+     */
+    private fun rebuildTreeFiltered(analysis: ProjectColorAnalysis, reference: UnifiedColor) {
+        val expandedKeys = saveExpandedKeys()
+        val selectedKeys = saveSelectedKeys()
+        val scrollPosition = (tree.parent as? JViewport)?.viewPosition
+
+        val refHexKey = ColorAnalyzer.toHexKey(reference)
+        // "Exact match" ignoring alpha (matches ColorAnalyzer's grouping key which includes alpha).
+        // Match on RGB portion so #FF0000 and rgb(255,0,0) collapse to the same group.
+        val refRgbKey = refHexKey.substring(0, 6)
+        fun rgbKey(k: String) = k.substring(0, 6)
+
+        val matchingGroups = analysis.colorGroups.filter { rgbKey(it.hexKey) == refRgbKey }
+        val matchingClusters = analysis.similarClusters.filter { cluster ->
+            cluster.colors.any { rgbKey(it.hexKey) == refRgbKey }
+        }
+        val matchingInconsistencies = analysis.formatInconsistencies.filter { rgbKey(it.hexKey) == refRgbKey }
+
+        val totalUses = matchingGroups.sumOf { it.count }
+        summaryLabel.text = if (matchingGroups.isEmpty() && matchingClusters.isEmpty() && matchingInconsistencies.isEmpty()) {
+            val refHex = ColorConverter.format(reference, ColorFormat.HEX6)
+            "$refHex not found (of ${analysis.uniqueColors} unique colors)."
+        } else {
+            buildString {
+                append("Inspecting ${ColorConverter.format(reference, ColorFormat.HEX6)}: ")
+                append("$totalUses ${plural(totalUses, "occurrence")}")
+                if (matchingClusters.isNotEmpty()) append(", ${matchingClusters.size} similar ${plural(matchingClusters.size, "cluster")}")
+                if (matchingInconsistencies.isNotEmpty()) append(", ${matchingInconsistencies.size} format ${plural(matchingInconsistencies.size, "inconsistency")}")
+            }
+        }
+
+        rootNode.removeAllChildren()
+
+        // Section: matching groups (Frequency)
+        if (matchingGroups.isNotEmpty()) {
+            val freqNode = DefaultMutableTreeNode(
+                SectionNode("Occurrences (${matchingGroups.size})")
+            )
+            for (group in matchingGroups) {
+                val hex = formatColor(group.color)
+                val dsName = findClosestDesignSystemName(group.color)
+                val suffix = if (dsName != null) "  [$dsName]" else ""
+                if (group.count == 1) {
+                    val occ = group.occurrences.first()
+                    freqNode.add(DefaultMutableTreeNode(
+                        OccurrenceEntry(occ, "$hex  ${occ.file.name}:${occ.line}", "${occ.matchText}$suffix")
+                    ))
+                } else {
+                    val uses = "${group.count} uses"
+                    val files = "in ${group.fileCount} ${plural(group.fileCount, "file")}"
+                    val groupNode = DefaultMutableTreeNode(
+                        ColorGroupEntry(group, hex, "$uses $files$suffix")
+                    )
+                    for (occ in group.occurrences) {
+                        groupNode.add(DefaultMutableTreeNode(
+                            OccurrenceEntry(occ, "${occ.file.name}:${occ.line}", occ.matchText)
+                        ))
+                    }
+                    freqNode.add(groupNode)
+                }
+            }
+            rootNode.add(freqNode)
+        }
+
+        // Section: Similar clusters that contain the reference color
+        if (matchingClusters.isNotEmpty()) {
+            val simNode = DefaultMutableTreeNode(
+                SectionNode("Similar Colors (${matchingClusters.size} ${plural(matchingClusters.size, "cluster")})")
+            )
+            for (cluster in matchingClusters) {
+                val totalClusterUses = cluster.colors.sumOf { it.count }
+                val hexes = cluster.colors.take(3).joinToString(", ") { formatColor(it.color) }
+                val representativeColor = cluster.colors.first().color
+                val clusterNode = DefaultMutableTreeNode(
+                    ClusterEntry(cluster, representativeColor, hexes, "dist ${"%.1f".format(cluster.maxDistance)}, $totalClusterUses uses")
+                )
+                for (group in cluster.colors) {
+                    val hex = formatColor(group.color)
+                    if (group.count == 1) {
+                        val occ = group.occurrences.first()
+                        clusterNode.add(DefaultMutableTreeNode(
+                            OccurrenceEntry(occ, "$hex  ${occ.file.name}:${occ.line}", occ.matchText)
+                        ))
+                    } else {
+                        val groupNode = DefaultMutableTreeNode(
+                            ColorGroupEntry(group, hex, "${group.count} uses")
+                        )
+                        for (occ in group.occurrences) {
+                            groupNode.add(DefaultMutableTreeNode(
+                                OccurrenceEntry(occ, "${occ.file.name}:${occ.line}", occ.matchText)
+                            ))
+                        }
+                        clusterNode.add(groupNode)
+                    }
+                }
+                simNode.add(clusterNode)
+            }
+            rootNode.add(simNode)
+        }
+
+        // Section: Format Inconsistencies for the reference color
+        if (matchingInconsistencies.isNotEmpty()) {
+            val fmtNode = DefaultMutableTreeNode(
+                SectionNode("Format Inconsistencies (${matchingInconsistencies.size})")
+            )
+            for (group in matchingInconsistencies) {
+                val hex = formatColor(group.color)
+                val formats = group.formats.joinToString(", ") { it.displayName }
+                val groupNode = DefaultMutableTreeNode(
+                    ColorGroupEntry(group, hex, "appears as: $formats")
+                )
+                val byFormat = group.occurrences.groupBy { it.format }
+                for ((fmt, occs) in byFormat) {
+                    val fmtSubNode = DefaultMutableTreeNode(
+                        FormatSubgroupEntry(fmt, "${fmt.displayName} (${occs.size})")
+                    )
+                    for (occ in occs) {
+                        fmtSubNode.add(DefaultMutableTreeNode(
+                            OccurrenceEntry(occ, "${occ.file.name}:${occ.line}", occ.matchText)
+                        ))
+                    }
+                    groupNode.add(fmtSubNode)
+                }
+                fmtNode.add(groupNode)
+            }
+            rootNode.add(fmtNode)
+        }
+
+        treeModel.reload()
+
+        if (expandedKeys.isNotEmpty()) {
+            restoreExpandedKeys(expandedKeys)
+            restoreSelectedKeys(selectedKeys)
+            if (scrollPosition != null) {
+                SwingUtilities.invokeLater {
+                    (tree.parent as? JViewport)?.viewPosition = scrollPosition
+                }
+            }
+        } else {
+            for (i in 0 until tree.rowCount.coerceAtMost(3)) {
+                tree.expandRow(i)
+            }
+        }
+    }
+
     private fun rebuildTree(analysis: ProjectColorAnalysis) {
+        val filter = inspectFilter
+        if (filter != null) {
+            rebuildTreeFiltered(analysis, filter)
+            return
+        }
+
         summaryLabel.text = buildString {
             append("${analysis.uniqueColors} unique colors, ")
             append("${analysis.totalOccurrences} occurrences in ${analysis.filesWithColors} files")
